@@ -235,15 +235,15 @@ class AllureAdapter extends Extension
     private function buildTestName($test) {
         $testName = $test->getName();
         if ($test instanceof Cest) {
-            $testFullName = get_class($test->getTestClass()) . '::' . $testName;
-            if(isset($this->testInvocations[$testFullName])) {
-                $this->testInvocations[$testFullName]++;
+            $testName = get_class($test->getTestClass()) . '::' . $testName;
+            if(isset($this->testInvocations[$testName])) {
+                $this->testInvocations[$testName]++;
             } else {
-                $this->testInvocations[$testFullName] = 0;
+                $this->testInvocations[$testName] = 0;
             }
             $currentExample = $test->getMetadata()->getCurrent();
             if ($currentExample && isset($currentExample['example']) ) {
-                $testName .= ' with data set #' . $this->testInvocations[$testFullName];
+                $testName .= ' with data set #' . $this->testInvocations[$testName];
             }
         } else if($test instanceof Gherkin) {
             $testName = $test->getMetadata()->getFeature();
