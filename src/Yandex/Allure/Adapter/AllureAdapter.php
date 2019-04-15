@@ -256,7 +256,10 @@ class AllureAdapter extends Extension
         $test = $testEvent->getTest();
         $testName = $this->buildTestName($test);
 		$event = new TestCaseStartedEvent($this->uuid, $testName);
-		$event->setLabels(['tread' => getenv('THREAD_NAME') ?: getmypid(), 'host' => gethostname() ]);
+		$labels = [
+			new Label('tread', getenv('THREAD_NAME') ?: getmypid()),
+			new Label('host', gethostname()),
+		];
         if ($test instanceof Cest) {
             $className = get_class($test->getTestClass());
             $annotations = [];
@@ -270,14 +273,15 @@ class AllureAdapter extends Extension
             $annotationManager->updateTestCaseEvent($event);
         } else if ($test instanceof Gherkin) {
             $featureTags = $test->getFeatureNode()->getTags();
-            $scenarioTags = $test->getScenarioNode()->getTags();
-            $event->setLabels(
+			$scenarioTags = $test->getScenarioNode()->getTags();
+			$labels = array_merge(
                     array_map(
-                            function ($a) {
-                                return new Label($a, LabelType::FEATURE);
-                            },
-                            array_merge($featureTags, $scenarioTags)
-                        )
+						function ($a) {
+							return new Label(LabelType::FEATURE, $a);
+						},
+						array_merge($featureTags, $scenarioTags)
+					),
+					$labels
                 );
         } else if ($test instanceof Cept) {
             $annotations = $this->getCeptAnnotations($test);
@@ -301,7 +305,8 @@ class AllureAdapter extends Extension
                 $annotationManager->updateTestCaseEvent($event);
             }
         }
-        $this->getLifecycle()->fire($event);
+		$event->setLabels($labels);
+		$this->getLifecycle()->fire($event);
 
         if ($test instanceof Cest) {
             $currentExample = $test->getMetadata()->getCurrent();
