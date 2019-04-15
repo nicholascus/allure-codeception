@@ -71,7 +71,7 @@ class AllureAdapter extends Extension
 
     /**
      * Annotations that should be ignored by the annotaions parser (especially PHPUnit annotations).
-     * 
+     *
      * @var array
      */
     private $ignoredAnnotations = [
@@ -85,7 +85,7 @@ class AllureAdapter extends Extension
 
     /**
      * Extra annotations to ignore in addition to standard PHPUnit annotations.
-     * 
+     *
      * @param array $ignoredAnnotations
      */
     public function _initialize(array $ignoredAnnotations = [])
@@ -139,7 +139,7 @@ class AllureAdapter extends Extension
     {
         if (array_key_exists($optionKey, $this->config)) {
             return $this->config[$optionKey];
-        } 
+        }
         return $defaultValue;
     }
 
@@ -255,7 +255,8 @@ class AllureAdapter extends Extension
     {
         $test = $testEvent->getTest();
         $testName = $this->buildTestName($test);
-        $event = new TestCaseStartedEvent($this->uuid, $testName);        
+		$event = new TestCaseStartedEvent($this->uuid, $testName);
+		$event->setLabels(['tread' => getenv('THREAD_NAME') ?: getmypid(), 'host' => gethostname() ]);
         if ($test instanceof Cest) {
             $className = get_class($test->getTestClass());
             $annotations = [];
