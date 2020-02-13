@@ -246,7 +246,7 @@ class AllureAdapter extends Extension
                 $testName .= ' with data set #' . $this->testInvocations[$testName];
             }
         } else if($test instanceof Gherkin) {
-            $testName = $test->getMetadata()->getFeature();
+            $testName = $test->getMetadata()->getFeature() . " :: " . $testName;
         }
         return $testName;
     }
@@ -255,11 +255,11 @@ class AllureAdapter extends Extension
     {
         $test = $testEvent->getTest();
         $testName = $this->buildTestName($test);
-		$event = new TestCaseStartedEvent($this->uuid, $testName);
-		$labels = [
-			new Label('tread', getenv('THREAD_NAME') ?: getmypid()),
-			new Label('host', gethostname()),
-		];
+        $event = new TestCaseStartedEvent($this->uuid, $testName);
+        $labels = [
+            new Label('tread', getenv('THREAD_NAME') ?: getmypid()),
+            new Label('host', gethostname()),
+        ];
         if ($test instanceof Cest) {
             $className = get_class($test->getTestClass());
             $annotations = [];
@@ -273,16 +273,16 @@ class AllureAdapter extends Extension
             $annotationManager->updateTestCaseEvent($event);
         } else if ($test instanceof Gherkin) {
             $featureTags = $test->getFeatureNode()->getTags();
-			$scenarioTags = $test->getScenarioNode()->getTags();
-			$labels = array_merge(
-                    array_map(
-						function ($a) {
-							return new Label(LabelType::FEATURE, $a);
-						},
-						array_merge($featureTags, $scenarioTags)
-					),
-					$labels
-                );
+            $scenarioTags = $test->getScenarioNode()->getTags();
+            $labels = array_merge(
+                array_map(
+                    function ($a) {
+                        return new Label(LabelType::FEATURE, $a);
+                    },
+                    array_merge($featureTags, $scenarioTags)
+                ),
+                $labels
+            );
         } else if ($test instanceof Cept) {
             $annotations = $this->getCeptAnnotations($test);
             if (count($annotations) > 0) {
@@ -305,15 +305,15 @@ class AllureAdapter extends Extension
                 $annotationManager->updateTestCaseEvent($event);
             }
         }
-		$event->setLabels($labels);
-		$this->getLifecycle()->fire($event);
+        $event->setLabels($labels);
+        $this->getLifecycle()->fire($event);
 
         if ($test instanceof Cest) {
             $currentExample = $test->getMetadata()->getCurrent();
             if ($currentExample && isset($currentExample['example']) ) {
                 foreach ($currentExample['example'] as $name => $param) {
                     $paramEvent = new Event\AddParameterEvent(
-                            $name, $this->stringifyArgument($param), ParameterKind::ARGUMENT);
+                        $name, $this->stringifyArgument($param), ParameterKind::ARGUMENT);
                     $this->getLifecycle()->fire($paramEvent);
                 }
             }
@@ -326,11 +326,11 @@ class AllureAdapter extends Extension
                 foreach ($method->invoke($test) as $key => $param) {
                     $paramName = array_shift($paramNames);
                     $paramEvent = new Event\AddParameterEvent(
-                            is_null($paramName)
-                                ? $key
-                                : $paramName->getName(),
-                            $this->stringifyArgument($param),
-                            ParameterKind::ARGUMENT);
+                        is_null($paramName)
+                            ? $key
+                            : $paramName->getName(),
+                        $this->stringifyArgument($param),
+                        ParameterKind::ARGUMENT);
                     $this->getLifecycle()->fire($paramEvent);
                 }
             }
@@ -405,7 +405,7 @@ class AllureAdapter extends Extension
 
         $this->emptyStep = false;
         $this->getLifecycle()->fire(new StepStartedEvent($stepName));
-}
+    }
 
     public function stepAfter()
     {
@@ -517,7 +517,7 @@ class AllureAdapter extends Extension
             foreach ($argument as $key => $value) {
                 if (is_object($value)) {
                     $argument[$key] = $this->getClassName($value);
-}
+                }
             }
         } elseif (is_object($argument)) {
             if (method_exists($argument, '__toString')) {
